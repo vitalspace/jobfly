@@ -1,6 +1,10 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 
+import db from "./db/db";
+
+db();
+
 const app = new Elysia()
   .use(
     cors({
