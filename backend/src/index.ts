@@ -1,7 +1,8 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
-
 import db from "./db/db";
+
+import { userRoutes } from "./controllers/user.controller";
 
 db();
 
@@ -13,6 +14,7 @@ const app = new Elysia()
       methods: ["GET", "POST", "PUT", "DELETE"],
     })
   )
+  .group("/api/v1", (app) => app.use(userRoutes))
   .listen(3000);
 
 console.log("Server on port: ", app.server?.port);
