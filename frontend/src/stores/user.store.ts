@@ -27,3 +27,5 @@ const createUserStore = () => {
     updateProfile,
   };
 };
+
+export const userStore = createUserStore();
