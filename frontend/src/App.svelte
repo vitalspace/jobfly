@@ -4,7 +4,7 @@
   import Home from "./routes/Home.svelte";
   import ProtectedRoute from "./routes/ProtectedRoute.svelte";
   import PublicRoute from "./routes/PublicRoute.svelte";
-  import Sigin from "./routes/Sigin.svelte";
+  import Signin from "./routes/Signin.svelte";
   import Signup from "./routes/Signup.svelte";
 </script>
 
@@ -12,7 +12,7 @@
   <Route path="/" component={Home} />
 
   <Route path="/signin">
-    <PublicRoute component={Sigin} />
+    <PublicRoute component={Signin} />
   </Route>
   <Route path="/signup">
     <PublicRoute component={Signup} />

@@ -1,4 +1,9 @@
 <script lang="ts">
+  import { navigate } from "svelte-routing";
+
+  function goToSign() {
+    navigate("/signup");
+  }
 </script>
 
 <div class="grid place-items-center">
@@ -15,12 +20,13 @@
       />
     </div>
     <div>
-      <h2 class="prompt-semibold text-4xl">
+      <h2 class="prompt-semibold text-4xl text-[#4a485d]">
         Over <span class="text-[#4969d6]">5,000 Jobs</span> are waiting for you
       </h2>
     </div>
     <div>
       <button
+        on:click={goToSign}
         class="prompt-extralight text-lg w-full rounded-xl bg-[#242240] py-3 text-white cursor-pointer"
         >Start searching</button
       >
