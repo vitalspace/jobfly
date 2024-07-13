@@ -3,11 +3,11 @@ import { Elysia, error, t } from "elysia";
 import { User } from "../models/user.model";
 
 interface IUser {
-  name: string;
+  fullname: string;
   age: number;
   location: string;
   email: string;
-  phone: number;
+  phone: string;
   password: string;
 }
 
@@ -25,8 +25,9 @@ export const userRoutes = new Elysia({
   .post(
     "/signup",
     async ({ body }) => {
+
       try {
-        const { name, age, location, email, password, phone }: IUser = body;
+        const { fullname, age, location, email, password, phone }: IUser = body;
 
         const existedUser = await User.findOne({
           $or: [{ email }, { phone }],
@@ -37,7 +38,7 @@ export const userRoutes = new Elysia({
         const hashPassword = await Bun.password.hash(password);
 
         const user = new User({
-          name,
+          fullname,
           email,
           age,
           password: hashPassword,
@@ -53,20 +54,22 @@ export const userRoutes = new Elysia({
     },
     {
       body: t.Object({
-        name: t.String({
+        fullname: t.String({
           minLength: 8,
         }),
         age: t.Number({
           minimum: 18,
         }),
         location: t.String(),
+        phone: t.String({
+          minLength: 10,
+        }),
         email: t.String({
           format: "email",
         }),
         password: t.String({
           minLength: 8,
         }),
-        phone: t.Number({}),
       }),
     }
   )
@@ -94,7 +97,7 @@ export const userRoutes = new Elysia({
           value: await jwt.sign({
             //@ts-ignore
             id: user._id,
-            name: user.name,
+            fullname: user.fullname,
             email: user.email,
           }),
           // httpOnly: true,
@@ -133,7 +136,7 @@ export const userRoutes = new Elysia({
 
       return {
         avatar: user.avatar,
-        name: user.name,
+        fullname: user.fullname,
         age: user.age,
         email: user.email,
         phone: user.phone,
