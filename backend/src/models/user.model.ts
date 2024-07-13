@@ -2,12 +2,12 @@ import mongoose, { type Document } from "mongoose";
 
 interface IUser extends Document {
   avatar: string;
-  name: string;
+  fullname: string;
   age: number;
   location: string;
   email: string;
   password: string;
-  phone: number;
+  phone: string;
 }
 
 const userSchema: mongoose.Schema<IUser> = new mongoose.Schema({
@@ -15,8 +15,7 @@ const userSchema: mongoose.Schema<IUser> = new mongoose.Schema({
     type: String,
     default: "",
   },
-
-  name: {
+  fullname: {
     type: String,
     required: true,
   },
@@ -38,7 +37,7 @@ const userSchema: mongoose.Schema<IUser> = new mongoose.Schema({
     required: true,
   },
   phone: {
-    type: Number,
+    type: String,
     required: true,
     unique: true,
   },
