@@ -1,3 +1,4 @@
+<!-- PublicOnlyRoute.svelte -->
 <script lang="ts">
   import { navigate } from "svelte-routing";
   import { auth } from "../stores/auth.store";
@@ -20,5 +21,6 @@
 </script>
 
 {#if !isAuthenticated}
+  <!-- <svelte:component this={component} {...props} /> -->
   <svelte:component this={component} />
 {/if}
