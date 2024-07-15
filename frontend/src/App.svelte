@@ -1,11 +1,18 @@
 <script lang="ts">
+  import { onMount } from "svelte";
   import { Route, Router } from "svelte-routing";
   import Dashboard from "./routes/Dashboard.svelte";
   import Home from "./routes/Home.svelte";
+  import Profile from "./routes/Profile.svelte";
   import ProtectedRoute from "./routes/ProtectedRoute.svelte";
   import PublicRoute from "./routes/PublicRoute.svelte";
   import Signin from "./routes/Signin.svelte";
   import Signup from "./routes/Signup.svelte";
+  import { auth } from "./stores/auth.store";
+
+  onMount(() => {
+    auth.initialize();
+  });
 </script>
 
 <Router>
@@ -20,6 +27,10 @@
 
   <Route path="/dashboard">
     <ProtectedRoute component={Dashboard} />
+  </Route>
+
+  <Route path="/profile">
+    <ProtectedRoute component={Profile} />
   </Route>
 </Router>
 
