@@ -6,6 +6,7 @@ interface IUser {
   fullname: string;
   age: number;
   location: string;
+  rol: string;
   email: string;
   phone: string;
   password: string;
@@ -25,9 +26,9 @@ export const userRoutes = new Elysia({
   .post(
     "/signup",
     async ({ body }) => {
-
       try {
-        const { fullname, age, location, email, password, phone }: IUser = body;
+        const { fullname, age, location, rol, email, password, phone }: IUser =
+          body;
 
         const existedUser = await User.findOne({
           $or: [{ email }, { phone }],
@@ -43,6 +44,7 @@ export const userRoutes = new Elysia({
           age,
           password: hashPassword,
           location,
+          rol,
           phone,
         });
 
@@ -61,6 +63,7 @@ export const userRoutes = new Elysia({
           minimum: 18,
         }),
         location: t.String(),
+        rol: t.String(),
         phone: t.String({
           minLength: 10,
         }),
@@ -122,6 +125,57 @@ export const userRoutes = new Elysia({
       }),
     }
   )
+
+  .put(
+    "update",
+    async ({ jwt, body, cookie: { auth } }) => {
+      try {
+        if (!auth) return error(401, "Unauthorized");
+        const profile = await jwt.verify(auth.value);
+
+        if (!profile || typeof profile.id !== "string")
+          return error(401, "Unauthorized");
+
+        const updatedUser = await User.findByIdAndUpdate(
+          { _id: profile.id },
+          { $set: { ...body } },
+          { new: true }
+        )
+          .select("-password")
+          .select("-_id")
+          .select("-_id")
+          .select("-createdAt")
+          .select("-updatedAt")
+          .select("-__v");
+
+        if (!updatedUser)
+          return error(404, `User with id ${profile.id} was not found`);
+
+        return JSON.stringify(updatedUser);
+      } catch (err) {
+        return error(500, { message: `Internal server error #${err}` });
+      }
+    },
+    {
+      body: t.Object({
+        avatar: t.String(),
+        fullname: t.String({
+          minLength: 8,
+        }),
+        age: t.Number({
+          minimum: 18,
+        }),
+        location: t.String(),
+        phone: t.String({
+          minLength: 10,
+        }),
+        email: t.String({
+          format: "email",
+        }),
+      }),
+    }
+  )
+
   .get("/profile", async ({ jwt, cookie: { auth } }) => {
     try {
       if (!auth) return error(401, "Unauthorized");
