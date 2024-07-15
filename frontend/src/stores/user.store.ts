@@ -1,8 +1,9 @@
 import { writable } from "svelte/store";
 import { getProfile } from "../services/user.services";
+import { type IUser } from "../types/types.d";
 
 const createUserStore = () => {
-  const { subscribe, set } = writable();
+  const { subscribe, set } = writable<Partial<IUser>>();
 
   const initialize = async () => {
     try {
