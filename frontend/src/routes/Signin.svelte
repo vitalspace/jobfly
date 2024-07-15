@@ -1,38 +1,55 @@
 <script lang="ts">
   import { AxiosError } from "axios";
   import { z } from "zod";
-  import {
-    type FormSchema,
-    signUpFormSchema,
-  } from "../schemas/singUpFormSchema";
-  import { type UserData } from "../types/types.d";
+  import { type FormSchema, formSchema } from "../schemas/singInSchema";
   import { signIn } from "../services/user.services";
+  import { type IUser } from "../types/types.d";
+  import { navigate } from "svelte-routing";
+  import Toast from "../components/Toast.svelte";
+  import { auth } from "../stores/auth.store";
 
-  let formData: Partial<UserData> = {
+  let formData: Partial<IUser> = {
     email: "",
     password: "",
   };
 
   let errors: Partial<FormSchema> = {};
 
+  let message = "";
+  let toastStatus = false;
+  const TOAST_DURATION = 3000;
+  let toastIcon: "success" | "error" = "success";
+
+  const showToast = (icon: "success" | "error", msg: string) => {
+    toastStatus = true;
+    toastIcon = icon;
+    message = msg;
+    setTimeout(() => (toastStatus = false), TOAST_DURATION);
+  };
+
   async function handleFormSubmission() {
     try {
-      signUpFormSchema.parse(formData);
+      formSchema.parse(formData);
       errors = {};
       const { data } = await signIn(formData);
-      console.log(data);
+      auth.login(data.token);
+      showToast("success", "Bienvenido papito");
+      navigate("/dashboard");
+
     } catch (error) {
       if (error instanceof z.ZodError) {
         errors = error.formErrors.fieldErrors as Partial<FormSchema>;
-        console.log(errors);
       } else if (error instanceof AxiosError) {
-        console.log(error.response?.data);
+        // console.log(error.response?.data);
+        showToast("error", error.response?.data.message);
       }
     }
   }
 </script>
 
-<div class="p-4">
+<Toast {toastStatus} {toastIcon} {message} />
+
+<div class="p-4 grid gap-y-4">
   <form class="grid gap-y-4" on:submit|preventDefault={handleFormSubmission}>
     <div class="grid gap-y-1">
       <label for="email" class="prompt-extralight text-xs text-[#4a485d]"
@@ -69,4 +86,12 @@
       >Submit</button
     >
   </form>
+
+  <div class="text-center">
+    <p class="prompt-extralight">or</p>
+  </div>
+
+  <div class="text-center">
+    <a class="prompt-semibold text-md text-[#242240]" href="/signup">Sign Up</a>
+  </div>
 </div>
