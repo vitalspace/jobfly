@@ -27,6 +27,9 @@
     "@capacitor/core": "^6.1.0",
     "@types/axios": "^0.14.0",
     "axios": "^1.7.2",
+    "flowbite-svelte": "^0.46.15",
+    "flowbite-svelte-icons": "^1.6.1",
+    "svelte-multiselect": "^10.3.0",
     "svelte-routing": "^2.13.0",
     "zod": "^3.23.8"
   }

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const signUpFormSchema = z.object({
+export const formSchema = z.object({
   fullname: z.string().trim().min(10, {
     message: `Must be 10 or more charaters long`,
   }),
@@ -10,6 +10,8 @@ export const signUpFormSchema = z.object({
   location: z.string().trim().min(3, {
     message: `Must be 3 or more charaters long`,
   }),
+
+  rol: z.string().trim(),
 
   phone: z.string().length(10).trim(),
 
@@ -23,4 +25,4 @@ export const signUpFormSchema = z.object({
     .trim(),
 });
 
-export type FormSchema = z.infer<typeof signUpFormSchema>;
+export type FormSchema = z.infer<typeof formSchema>;
