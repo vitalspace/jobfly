@@ -8,7 +8,7 @@
 
 <div class="grid place-items-center">
   <div class="w-full justify-start p-4 xl:w-1/4">
-    <h1 class="prompt-semibold text-[#4a485d] text-lg">JOBSNAP</h1>
+    <h1 class="prompt-semibold text-[#4a485d] text-lg">JOBFLY</h1>
   </div>
 </div>
 <div class="grid h-screen place-items-center">
