@@ -7,6 +7,18 @@ const config: CapacitorConfig = {
   server: {
     url: "http://192.168.56.1:5173/",
     cleartext: true,
+    allowNavigation: ["http://192.168.56.1:3000/api/v1"],
+  },
+  android: {
+    allowMixedContent: true,
+  },
+  plugins: {
+    CapacitorCookies: {
+      enabled: true,
+    },
+    CapacitorHttp: {
+      enabled: true,
+    },
   },
 };
 
