@@ -1,16 +1,9 @@
 import { jwt } from "@elysiajs/jwt";
 import { Elysia, error, t } from "elysia";
 import { User } from "../models/user.model";
+import { Job } from "../models/job.model";
 
-interface IUser {
-  fullname: string;
-  age: number;
-  location: string;
-  rol: string;
-  email: string;
-  phone: string;
-  password: string;
-}
+import { type IUser, IJob } from "../types/types.d";
 
 export const userRoutes = new Elysia({
   detail: {
@@ -27,8 +20,15 @@ export const userRoutes = new Elysia({
     "/signup",
     async ({ body }) => {
       try {
-        const { fullname, age, location, rol, email, password, phone }: IUser =
-          body;
+        const {
+          fullname,
+          age,
+          location,
+          rol,
+          email,
+          password,
+          phone,
+        }: Partial<IUser> = body;
 
         const existedUser = await User.findOne({
           $or: [{ email }, { phone }],
@@ -47,7 +47,6 @@ export const userRoutes = new Elysia({
           rol,
           phone,
         });
-
         await user.save();
         return { message: "User created successfully" };
       } catch (err) {
@@ -76,6 +75,7 @@ export const userRoutes = new Elysia({
       }),
     }
   )
+
   .post(
     "/signin",
     async ({ body, jwt, cookie: { auth } }) => {
@@ -127,7 +127,7 @@ export const userRoutes = new Elysia({
   )
 
   .put(
-    "update",
+    "/update",
     async ({ jwt, body, cookie: { auth } }) => {
       try {
         if (!auth) return error(401, "Unauthorized");
@@ -184,19 +184,212 @@ export const userRoutes = new Elysia({
 
       if (!token) return error(401, "Unauthorized");
 
-      const user = await User.findById({ _id: token.id });
+      const user = await User.findById({ _id: token.id })
+        .select("-password")
+        .select("-__v");
 
       if (!user) return error(404, { message: "User not found" });
 
       return {
-        avatar: user.avatar,
-        fullname: user.fullname,
-        age: user.age,
-        email: user.email,
-        phone: user.phone,
-        location: user.location,
+        user,
       };
     } catch (err) {
       return error(500, { message: `Internal server error ${err}` });
+    }
+  })
+
+  .post(
+    "/apply",
+    async ({ jwt, body, cookie: { auth } }) => {
+      try {
+        const { id } = body;
+
+        if (!auth) return error(401, "Unauthorized");
+
+        const token = await jwt.verify(auth.value);
+        if (!token) return error(401, "Unauthorized");
+
+        //@ts-ignore
+        const user: Partial<IUser> = await User.findById({ _id: token.id });
+        if (!user) return error(404, { message: "User not found" });
+
+        //@ts-ignore
+        if (user.applications?.includes(id))
+          return error(409, {
+            message: "You have already applied to this job",
+          });
+        //@ts-ignore
+        user.applications?.push(id);
+        //@ts-ignore
+        await user.save();
+
+        //@ts-ignore
+        const job: Partial<IJob> = await Job.findById({ _id: id });
+        if (!job) return error(404, { message: "Job not found" });
+        //@ts-ignore
+        if (job.applicants?.includes(user._id))
+          return error(409, {
+            message: "You have already applied to this job",
+          });
+        //@ts-ignore
+
+        job.applicants?.push(user._id);
+        //@ts-ignore
+        await job.save();
+
+        return { message: "You have applied to this job correctly" };
+      } catch (err) {
+        return error(500, { message: `Internal server error ${err}` });
+      }
+    },
+    {
+      body: t.Object({
+        id: t.String(),
+      }),
+    }
+  )
+
+  .post("/unapply", async ({ jwt, body, cookie: { auth } }) => {
+    try {
+      //@ts-ignore
+      const { id } = body;
+
+      if (!auth) error(401, "Unauthorized");
+
+      const token = await jwt.verify(auth.value);
+      if (!token) return error(401, "Unauthorized");
+
+      const user = await User.findById({ _id: token.id });
+      if (!user) return error(404, { message: "User not found" });
+
+      if (!user.applications.includes(id)) {
+        return error(409, {
+          message: "You haven't applied to this job yet",
+        });
+      }
+
+      user.applications?.splice(user.applications.indexOf(id), 1);
+      await user.save();
+
+      //@ts-ignore
+      const job: Partial<IJob> = await Job.findById({ _id: id });
+      if (!job) return error(404, { message: "Job not found" });
+      //@ts-ignore
+      if (!job.applicants?.includes(user._id))
+        return error(409, {
+          message: "You haven't applied to this job yet",
+        });
+      //@ts-ignore
+      job.applicants?.splice(job.applicants.indexOf(user._id), 1);
+      //@ts-ignore
+      await job.save();
+
+      return { message: "You have unapplied from this job correctly" };
+    } catch (err) {
+      return error(500, { message: `Internal server error: ${err}` });
+    }
+  })
+
+  .post(
+    "/savejob",
+    async ({ jwt, body, cookie: { auth } }) => {
+      try {
+        const { id } = body;
+
+        if (!auth) return error(401, "Unauthorized");
+
+        const token = await jwt.verify(auth.value);
+        if (!token) return error(401, "Unauthorized");
+
+        //@ts-ignore
+        const user: Partial<IUser> = await User.findById({ _id: token.id });
+        if (!user) return error(404, { message: "User not found" });
+
+        //@ts-ignore
+        if (user.savedJobs.includes(id))
+          return error(409, {
+            message: "You have already saved this job",
+          });
+        //@ts-ignore
+        user.savedJobs.push(id);
+        //@ts-ignore
+        await user.save();
+
+        return { message: "You have saved to this job correctly" };
+      } catch (err) {
+        return error(500, { message: `Internal server error ${err}` });
+      }
+    },
+    {
+      body: t.Object({
+        id: t.String(),
+      }),
+    }
+  )
+
+  .post(
+    "/unsavedjob",
+    async ({ jwt, body, cookie: { auth } }) => {
+      try {
+        const { id } = body;
+
+        if (!auth) return error(401, "Unauthorized");
+
+        const token = await jwt.verify(auth.value);
+        if (!token) return error(401, "Unauthorized");
+
+        //@ts-ignore
+        const user: Partial<IUser> = await User.findById({ _id: token.id });
+        if (!user) return error(404, { message: "User not found" });
+
+        //@ts-ignore
+        if (!user.savedJobs.includes(id))
+          return error(409, {
+            message: "You haven't saved this job yet",
+          });
+        //@ts-ignore
+        user.savedJobs = user.savedJobs.filter(
+          (savedId: string) => savedId.toString() !== id.toString()
+        );
+
+        //@ts-ignore
+        await user.save();
+
+        return {
+          message: "You have removed this job from your saved list correctly",
+        };
+      } catch (err) {
+        return error(500, { message: `Internal server error ${err}` });
+      }
+    },
+    {
+      body: t.Object({
+        id: t.String(),
+      }),
+    }
+  )
+
+  .get("/getmyjobs", async ({ jwt, cookie: { auth } }) => {
+    try {
+      if (!auth) return error(401, "Unauthorized");
+
+      const token = await jwt.verify(auth.value);
+
+      if (!token || typeof token.id !== "string")
+        return error(401, "Unauthorized");
+
+      const user = await User.findOne({ _id: token.id });
+
+      if (!user) return error(404, { message: "User not found" });
+
+      if (user.rol === "Recruiter") {
+        const jobs = await Job.find({ recruiter: user._id });
+        return { jobs };
+      } else {
+        const jobs = await Job.find({ applicants: { $in: [user._id] } });
+        return { jobs };
+      }
+    } catch (err) {
+      return error(500, { message: `Internal server error: ${err} ` });
     }
   });
