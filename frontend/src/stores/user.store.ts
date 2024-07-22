@@ -7,7 +7,8 @@ const createUserStore = () => {
 
   const initialize = async () => {
     try {
-      const { data } = await getProfile();
+      const response = await getProfile();
+      const data = response.data.user;
       set(data);
     } catch (error) {
       if (error instanceof Error) {
