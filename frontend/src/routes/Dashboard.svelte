@@ -1,39 +1,80 @@
 <script lang="ts">
+  import { AxiosError } from "axios";
+  import { onMount } from "svelte";
+  import { Link } from "svelte-routing";
+  import Job from "../components/Job.svelte";
   import Menu from "../components/Menu.svelte";
+  import { getMyJobs } from "../services/user.services";
+  import { allJobs } from "../services/job.services";
   import { userStore } from "../stores/user.store";
+  import type { IJob } from "../types/types";
 
   userStore.initialize();
+
+  let search: string = "";
+  let jobs: Partial<IJob>[] = [];
+  let promote: Partial<IJob>;
+
+  $: visibleJobs = search
+    ? jobs.filter((job) => {
+        return (
+          job.title?.toLowerCase().match(`${search.toLowerCase()}.*`) ||
+          job.location?.toLowerCase().match(`${search.toLowerCase()}.*`) ||
+          job.level?.toLowerCase().match(`${search.toLowerCase()}.*`) ||
+          job.company?.toLowerCase().match(`${search.toLowerCase()}.*`) ||
+          job.employment?.toLowerCase().match(`${search.toLowerCase()}.*`)
+        );
+      })
+    : jobs;
+
+  onMount(async () => {
+    try {
+      const response = await getMyJobs();
+      jobs = response.data.jobs;
+
+      const resPromote = await allJobs();
+      const randomIndex = Math.floor(
+        Math.random() * resPromote.data.jobs.length
+      );
+      promote = resPromote.data.jobs[randomIndex];
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.log(error.response?.data.message);
+      }
+    }
+  });
 </script>
 
-<div class="p-4 grid gap-4 mt-16">
+<div class="p-4 grid gap-4 mt-10">
   <div class="flex place-items-center justify-between">
     <div class="flex place-items-center gap-x-2">
       <div class="rounded-full border p-2">
         {#if $userStore && $userStore.avatar != ""}
-        <h2 class="">mi</h2>
-      {:else}
-        <svg
-          class="h-8 w-8 text-black"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          stroke-width="2"
-          stroke="currentColor"
-          fill="none"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path stroke="none" d="M0 0h24v24H0z" />
-          <circle cx="12" cy="7" r="4" />
-          <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-        </svg>
-      {/if}
+          <h2 class="">mi</h2>
+        {:else}
+          <svg
+            class="h-8 w-8 text-black"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+            fill="none"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path stroke="none" d="M0 0h24v24H0z" />
+            <circle cx="12" cy="7" r="4" />
+            <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+          </svg>
+        {/if}
       </div>
       <div>
         {#if $userStore && $userStore.fullname}
           <h2 class="prompt-semibold text-sm">{$userStore.fullname}</h2>
+          <p class="prompt-extralight text-xs">{$userStore.location}</p>
+          <p class="prompt-extralight text-xs">{$userStore.rol}</p>
         {/if}
-
         <p class="prompt-extralight text-xs">Developer</p>
       </div>
     </div>
@@ -81,74 +122,65 @@
         class="prompt-extralight text-md w-full outline-none"
         type="text"
         placeholder="Enter a job title or keyword"
+        bind:value={search}
       />
     </div>
   </div>
 
   <div>
-    <h2 class="prompt-semibold">Promote Jobs</h2>
-
-    <div class="rounded-xl bg-[#597ae8] p-2 grid gap-4">
-      <div class="flex place-items-center justify-between">
-        <div class="flex place-items-center space-x-4">
-          <div class="rounded-lg bg-[#fed0fd] p-2">
-            <svg
-              class="h-8 w-8 text-black"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              stroke-width="2"
-              stroke="currentColor"
-              fill="none"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path stroke="none" d="M0 0h24v24H0z" />
-              <circle cx="6" cy="6" r="2" />
-              <circle cx="18" cy="6" r="2" />
-              <circle cx="6" cy="18" r="2" />
-              <circle cx="18" cy="18" r="2" />
-              <line x1="6" y1="8" x2="6" y2="16" />
-              <line x1="8" y1="6" x2="16" y2="6" />
-              <line x1="8" y1="18" x2="16" y2="18" />
-              <line x1="18" y1="8" x2="18" y2="16" />
-            </svg>
-          </div>
-          <div>
-            <h2 class="prompt-semibold text-white">People partner</h2>
-            <p class="prompt-extralight text-sm text-white">
-              Happy Compant Co.
-            </p>
-          </div>
-        </div>
-
+    <h2 class="prompt-semibold text-sm">Promote Job</h2>
+    <div class="grid gap-4">
+      {#if promote}
+        <Link to={"/job/" + promote._id}>
+          <Job isNormalStyle={false} data={promote} />
+        </Link>
+      {:else}
         <div>
-          <svg
-            class="h-6 w-6 text-white"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            ><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg
-          >
+          <h2 class="prompt-extralight text-sm">No promoted jobs available</h2>
         </div>
-      </div>
-
-      <div class="grid gap-2">
-        <h2 class="prompt-extralight text-white">Full-time / Remotely</h2>
-        <div class="flex justify-between place-items-center">
-          <h2
-            class="prompt-semibold rounded-xl bg-[#4968d7] px-4 py-1 text-xs text-white"
-          >
-            Senion level
-          </h2>
-          <p class="prompt-extralight text-xs text-white">260k/year</p>
-        </div>
-      </div>
+      {/if}
     </div>
   </div>
+
+  {#if $userStore && $userStore.rol === "Recruiter"}
+    <div class="mb-14">
+      <h2 class="prompt-semibold text-sm">Your published jobs</h2>
+      <div class="grid gap-4">
+        {#if visibleJobs.length > 0}
+          {#each visibleJobs as job}
+            <Link to={"/job/" + job._id}>
+              <Job isNormalStyle={true} data={job} />
+            </Link>
+          {/each}
+        {:else}
+          <div>
+            <h2 class="prompt-extralight text-md">
+              You have not published any jobs yet
+            </h2>
+          </div>
+        {/if}
+      </div>
+    </div>
+  {:else}
+    <div class="mb-14">
+      <h2 class="prompt-semibold text-sm">Your postulated jobs</h2>
+      <div class="grid gap-4">
+        {#if visibleJobs.length > 0}
+          {#each visibleJobs as job}
+            <Link to={"/job/" + job._id}>
+              <Job isNormalStyle={true} data={job} />
+            </Link>
+          {/each}
+        {:else}
+          <div>
+            <h2 class="prompt-extralight text-sm">
+              You have not applied for any job yet.
+            </h2>
+          </div>
+        {/if}
+      </div>
+    </div>
+  {/if}
 </div>
 
-<Menu />
+<Menu hiddeHistory={true} />
