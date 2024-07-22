@@ -1,10 +1,19 @@
 <script lang="ts">
+  import { AxiosError } from "axios";
   import { onMount } from "svelte";
+  import { z } from "zod";
   import Menu from "../components/Menu.svelte";
+  import { formSchema, type FormSchema } from "../schemas/updateSchema";
+  import { update } from "../services/user.services";
   import { userStore } from "../stores/user.store";
   import { type IUser } from "../types/types.d";
+  import { MultiSelect } from "svelte-multiselect";
+  import Toast from "../components/Toast.svelte";
+  import { countries } from "../lib/countries";
+  import { Link } from "svelte-routing";
 
   let editProfileStatus = false;
+  let hiddeHistoryStatus = false;
 
   let formData: Partial<IUser> = {
     avatar: "",
@@ -14,6 +23,43 @@
     age: null,
     phone: "",
   };
+
+  let errors: Partial<FormSchema> = {};
+
+  let message = "";
+  let toastStatus = false;
+  const TOAST_DURATION = 3000;
+  let toastIcon: "success" | "error" = "success";
+
+  const showToast = (icon: "success" | "error", msg: string) => {
+    toastStatus = true;
+    toastIcon = icon;
+    message = msg;
+    setTimeout(() => (toastStatus = false), TOAST_DURATION);
+  };
+
+  function showEditProfile() {
+    editProfileStatus = !editProfileStatus;
+    hiddeHistoryStatus = !hiddeHistoryStatus;
+  }
+
+  async function handleFormSubmission() {
+    try {
+      formSchema.parse(formData);
+      console.log("me cumplo");
+      errors = {};
+      const { data } = await update(formData);
+      userStore.updateProfile(data);
+      showEditProfile();
+      showToast("success", "Profile updated successfully");
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        errors = error.formErrors.fieldErrors as Partial<FormSchema>;
+      } else if (error instanceof AxiosError) {
+        showToast("error", error.response?.data.message);
+      }
+    }
+  }
 
   onMount(() => {
     userStore.subscribe((v) => {
@@ -25,11 +71,9 @@
       formData.phone = v.phone;
     });
   });
-
-  function showEditProfile() {
-    editProfileStatus = !editProfileStatus;
-  }
 </script>
+
+<Toast {toastStatus} {toastIcon} {message} />
 
 <div class="grid h-screen place-items-center">
   {#if !editProfileStatus}
@@ -60,6 +104,9 @@
           {formData.fullname}
         </h2>
         <p class="prompt-extralight text-sm text-[#2b2b2b]">Web Developer</p>
+        <p class="prompt-extralight text-sm text-[#2b2b2b]">
+          {formData.location}
+        </p>
         <p class="prompt-extralight text-sm text-[#2b2b2b]">{formData.email}</p>
       </div>
 
@@ -72,7 +119,39 @@
       </div>
 
       <div class="grid w-full gap-y-6 rounded-lg bg-[#6387F2] p-4 shadow-md">
-        <div>
+        <div class="flex justify-between place-items-center">
+          <div class="flex place-items-center space-x-2">
+            <div class="bg-[#4968d7] p-1 rounded-lg">
+              <svg
+                class="h-5 w-5 text-white"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+                fill="none"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path stroke="none" d="M0 0h24v24H0z" />
+                <rect x="3" y="7" width="18" height="13" rx="2" />
+                <path d="M8 7v-2a2 2 0 0 1 2 -2h4a2 2 0 0 1 2 2v2" />
+                <line x1="12" y1="12" x2="12" y2="12.01" />
+                <path d="M3 13a20 20 0 0 0 18 0" /></svg
+              >
+            </div>
+            <h2 class="prompt-semibold text-xs text-white ">My jobs</h2>
+          </div>
+
+          <div>
+            <Link to="/myjobs"
+              class="bg-[#4968d7] px-2 rounded-lg text-white cursor-pointer prompt-semibold text-xs py-1"
+              >View</Link
+            >
+          </div>
+        </div>
+
+        <div class="flex justify-between place-items-center">
           <div class="flex place-items-center space-x-2">
             <div class="bg-[#4968d7] p-1 rounded-lg">
               <svg
@@ -99,9 +178,9 @@
           </div>
         </div>
 
-        <div>
+        <div class="flex justify-between place-items-center">
           <div class="flex place-items-center space-x-2">
-            <div class="bg-[#4968d7] p-1 rounded-lg">
+            <div class="bg-[#4968d7] p-1 rounded-md">
               <svg
                 class="h-5 w-5 text-white"
                 width="24"
@@ -130,6 +209,12 @@
             </div>
             <h2 class="prompt-semibold text-xs text-white">Invite people</h2>
           </div>
+
+          
+          <div>
+            <button class="bg-[#4968d7] px-2 rounded-md text-white cursor-pointer prompt-semibold text-xs py-1">Code</button>
+          </div>
+
         </div>
       </div>
     </div>
@@ -190,6 +275,11 @@
             type="text"
             bind:value={formData.fullname}
           />
+          {#if errors.fullname}
+            <p class="text-red-500 prompt-extralight text-xs">
+              {errors.fullname}
+            </p>
+          {/if}
 
           <label for="" class="prompt-extralight text-xs">Age</label>
           <input
@@ -197,13 +287,31 @@
             type="text"
             bind:value={formData.age}
           />
+          {#if errors.age}
+            <p class="text-red-500 prompt-extralight text-xs">{errors.age}</p>
+          {/if}
 
-          <label for="" class="prompt-extralight text-xs">Location</label>
-          <input
-            class="prompt-extralight rounded-xl border py-2 pl-2"
-            type="text"
+          <label for="location" class="prompt-extralight text-xs text-[#4a485d]"
+            >Location</label
+          >
+          <MultiSelect
+            options={countries}
+            required={1}
+            minSelect={1}
+            maxSelect={1}
+            selected={[`${formData.location}`]}
+            --sms-padding="0.5rem"
+            --sms-border-radius="0.75rem"
+            --sms-selected-bg="#242240"
+            --sms-selected-text-color="white"
+            liSelectedClass="text-xs font-[prompt-extralight]"
             bind:value={formData.location}
           />
+          {#if errors.location}
+            <p class="text-red-500 prompt-extralight text-xs">
+              {errors.location}
+            </p>
+          {/if}
 
           <label for="" class="prompt-extralight text-xs">Phone</label>
           <input
@@ -211,6 +319,9 @@
             type="text"
             bind:value={formData.phone}
           />
+          {#if errors.phone}
+            <p class="text-red-500 prompt-extralight text-xs">{errors.phone}</p>
+          {/if}
 
           <label for="" class="prompt-extralight text-xs">Email</label>
           <input
@@ -218,6 +329,9 @@
             type="text"
             bind:value={formData.email}
           />
+          {#if errors.email}
+            <p class="text-red-500 prompt-extralight text-xs">{errors.email}</p>
+          {/if}
 
           <!-- <label for="" class="prompt-extralight text-xs">Password</label>
           <input
@@ -229,6 +343,7 @@
 
       <div class="">
         <button
+          on:click={handleFormSubmission}
           class="prompt-semibold w-full rounded-xl bg-[#252526] py-3 text-sm text-white"
           >Submit</button
         >
@@ -243,4 +358,4 @@
   {/if}
 </div>
 
-<Menu />
+<Menu hiddeHistory={hiddeHistoryStatus} />
