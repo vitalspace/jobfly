@@ -10,7 +10,7 @@
   import { countries } from "../lib/countries";
   import { rol } from "../lib/rol";
 
-  let formData: IUser = {
+  let formData: Partial<IUser> = {
     fullname: "",
     age: 18,
     location: "",
@@ -46,7 +46,6 @@
     } catch (error) {
       if (error instanceof z.ZodError) {
         errors = error.formErrors.fieldErrors as Partial<FormSchema>;
-        console.log(errors);
       } else if (error instanceof AxiosError) {
         // console.log(error);
         showToast("error", error.response?.data.message);
