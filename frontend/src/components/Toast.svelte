@@ -11,7 +11,7 @@
   <div
     class="fixed left-0 top-6 right-0 flex items-start justify-center pointer-events-none"
   >
-    <Toast dismissable={false} color="green" transition={fade} bind:toastStatus>
+    <Toast dismissable={false} class="bg-transparent border-none shadow-none" color="green" transition={fade} bind:toastStatus>
       <div
         class="bg-[#333333] mt-4 space-x-2 flex items-center justify-center rounded-md py-2 pointer-events-auto"
       >
