@@ -3,6 +3,7 @@ import { cors } from "@elysiajs/cors";
 import db from "./db/db";
 
 import { userRoutes } from "./controllers/user.controller";
+import { jobRoutes } from "./controllers/job.controller";
 
 db();
 
@@ -15,6 +16,7 @@ const app = new Elysia()
     })
   )
   .group("/api/v1", (app) => app.use(userRoutes))
+  .group("/api/v1", (app) => app.use(jobRoutes))
   .listen(3000);
 
 console.log("Server on port: ", app.server?.port);
