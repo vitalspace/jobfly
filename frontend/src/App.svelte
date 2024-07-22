@@ -1,13 +1,18 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { Route, Router } from "svelte-routing";
+  import CreateJob from "./routes/CreateJob.svelte";
   import Dashboard from "./routes/Dashboard.svelte";
   import Home from "./routes/Home.svelte";
+  import Job from "./routes/Job.svelte";
+  import MyJobs from "./routes/MyJobs.svelte";
   import Profile from "./routes/Profile.svelte";
   import ProtectedRoute from "./routes/ProtectedRoute.svelte";
+  import ProtectedRouteRol from "./routes/ProtectedRouteRol.svelte";
   import PublicRoute from "./routes/PublicRoute.svelte";
   import Signin from "./routes/Signin.svelte";
   import Signup from "./routes/Signup.svelte";
+  import FindJob from "./routes/Search.svelte";
   import { auth } from "./stores/auth.store";
 
   onMount(() => {
@@ -27,6 +32,22 @@
 
   <Route path="/dashboard">
     <ProtectedRoute component={Dashboard} />
+  </Route>
+
+  <Route path="/job/:id">
+    <ProtectedRoute component={Job} />
+  </Route>
+
+  <Route path="/createjob">
+    <ProtectedRouteRol component={CreateJob} />
+  </Route>
+
+  <Route path="/myjobs">
+    <ProtectedRoute component={MyJobs} />
+  </Route>
+
+  <Route path="/search">
+    <ProtectedRoute component={FindJob} />
   </Route>
 
   <Route path="/profile">
