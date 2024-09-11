@@ -35,7 +35,6 @@
       auth.login(data.token);
       showToast("success", "Bienvenido papito");
       navigate("/dashboard");
-
     } catch (error) {
       if (error instanceof z.ZodError) {
         errors = error.formErrors.fieldErrors as Partial<FormSchema>;
@@ -49,8 +48,10 @@
 
 <Toast {toastStatus} {toastIcon} {message} />
 
-<div class="p-4 grid gap-y-4">
-  <form class="grid gap-y-4" on:submit|preventDefault={handleFormSubmission}>
+<div class="p-4 grid gap-y-4 place-items-center h-screen">
+  <form class="grid gap-y-4 w-full " on:submit|preventDefault={handleFormSubmission}>
+    <div class="text-center text-4xl">Sign In</div>
+
     <div class="grid gap-y-1">
       <label for="email" class="prompt-extralight text-xs text-[#4a485d]"
         >Email</label
@@ -85,13 +86,13 @@
       class="prompt-semibold rounded-xl bg-[#242240] py-3 text-base text-white"
       >Submit</button
     >
+
+    <div>
+      <p class="text-center">
+        No have an account? <a class="prompt-semibold text-md text-[#242240]" href="/signup"
+          >Sign Up</a
+        >
+      </p>
+    </div>
   </form>
-
-  <div class="text-center">
-    <p class="prompt-extralight">or</p>
-  </div>
-
-  <div class="text-center">
-    <a class="prompt-semibold text-md text-[#242240]" href="/signup">Sign Up</a>
-  </div>
 </div>
